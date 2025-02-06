@@ -48,4 +48,13 @@ class NoteController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'Note deleted successfully.');
     }
+
+    public function contoh()
+    {
+        $data = Note::where('user_id', 2)->get();
+
+        return response()->json([
+            'data' => $data
+        ]);
+    } 
 }

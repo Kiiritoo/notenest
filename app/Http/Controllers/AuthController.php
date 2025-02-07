@@ -39,34 +39,31 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
-    public function register(Request $request) {
+    public function register(Request $request)
+    {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'min:5', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ], [
-            'name.required' => 'Nama wajib diisi',
-            'name.string' => 'Nama harus berupa teks',
-            'name.max' => 'Nama tidak boleh lebih dari 255 karakter',
-            'email.required' => 'Email wajib diisi',
-            'email.email' => 'Format email tidak valid',
-            'email.max' => 'Email tidak boleh lebih dari 255 karakter',
-            'email.min' => 'Email minimal 5 karakter',
-            'email.unique' => 'Email sudah terdaftar',
-            'password.required' => 'Password wajib diisi',
-            'password.min' => 'Password minimal 8 karakter',
-            'password.confirmed' => 'Konfirmasi password tidak cocok',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
         ]);
+
+        // Check if this is the first user
+        $isFirstUser = User::count() === 0;
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $isFirstUser ? 'super_admin' : 'user',
         ]);
 
         Auth::login($user);
 
-        return redirect()->route('dashboard')->with('success', 'Registrasi berhasil! Selamat datang di NoteNest.');
+        return redirect()->route('dashboard')->with('success', 
+            $isFirstUser 
+                ? 'Welcome Super Admin! Your account has been created.' 
+                : 'Registration successful! Welcome to NoteNest.'
+        );
     }
 
     public function logout(Request $request) {

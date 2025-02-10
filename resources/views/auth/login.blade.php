@@ -16,17 +16,34 @@
             <h2 class="mt-6 text-3xl font-extrabold text-gray-900">NoteNest</h2>
             <p class="mt-2 text-sm text-gray-600">Sign in to access your notes</p>
         </div>
-        @include('partials.validation-messages')
-        <form class="mt-8 space-y-6" action="{{ route('login') }}" method="POST">
+
+        @if ($errors->has('email') && $errors->first('email') === 'Email atau password yang anda masukkan salah.')
+            <div class="rounded-lg bg-red-50 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">Invalid email or password.</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <form id="loginForm" class="mt-8 space-y-6" action="{{ route('login') }}" method="POST" novalidate>
             @csrf
             <div class="space-y-4">
                 <div>
-                    <label for="email" class="sr-only">Email address</label>
-                    <input id="email" name="email" type="email" autocomplete="email" required value="{{ old('email') }}" class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm" placeholder="Email address">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                    <input id="email" name="email" type="email" autocomplete="email" value="{{ old('email') }}" 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm">
                 </div>
                 <div>
-                    <label for="password" class="sr-only">Password</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" required class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 focus:z-10 sm:text-sm" placeholder="Password">
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm">
                 </div>
             </div>
 
@@ -39,11 +56,9 @@
                 </div>
             </div>
 
-            <div>
-                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
-                    Sign in
-                </button>
-            </div>
+            <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                Sign in
+            </button>
         </form>
         <div class="text-center space-y-2">
             <a href="#" class="font-medium text-purple-600 hover:text-purple-500 block">
@@ -55,4 +70,75 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    let currentErrorMessages = {};
+
+    function showError(input, message) {
+        removeError(input);
+        const errorElement = document.createElement('p');
+        errorElement.className = 'mt-1 text-sm text-red-600';
+        errorElement.textContent = message;
+        input.classList.add('border-red-500');
+        input.parentElement.appendChild(errorElement);
+        currentErrorMessages[input.id] = errorElement;
+    }
+
+    function removeError(input) {
+        if (currentErrorMessages[input.id]) {
+            currentErrorMessages[input.id].remove();
+            currentErrorMessages[input.id] = null;
+            input.classList.remove('border-red-500');
+        }
+    }
+
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    emailInput.addEventListener('input', function() {
+        if (!this.value) {
+            showError(this, 'Email is required');
+        } else if (!validateEmail(this.value)) {
+            showError(this, 'Please enter a valid email address');
+        } else {
+            removeError(this);
+        }
+    });
+
+    passwordInput.addEventListener('input', function() {
+        if (!this.value) {
+            showError(this, 'Password is required');
+        } else {
+            removeError(this);
+        }
+    });
+
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+
+        if (!emailInput.value) {
+            showError(emailInput, 'Email is required');
+            isValid = false;
+        } else if (!validateEmail(emailInput.value)) {
+            showError(emailInput, 'Please enter a valid email address');
+            isValid = false;
+        }
+
+        if (!passwordInput.value) {
+            showError(passwordInput, 'Password is required');
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
 @endsection
